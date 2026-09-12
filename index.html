@@ -1,1 +1,284 @@
 
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palloncini dell'Alfabeto</title>
+<style>
+  :root {
+    --cielo-alto: #4fa8e0;
+    --cielo-basso: #bfe4ff;
+    --sole: #ffe066;
+    --testo: #1b3a4b;
+  }
+ 
+  * { box-sizing: border-box; }
+ 
+  body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    background: linear-gradient(to top, var(--cielo-basso), var(--cielo-alto));
+    position: relative;
+  }
+ 
+  /* Sole decorativo, fermo, in alto */
+  .sole {
+    position: absolute;
+    top: 30px;
+    right: 40px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--sole);
+    box-shadow: 0 0 40px 10px rgba(255, 224, 102, 0.7);
+  }
+ 
+  /* Nuvole decorative */
+  .nuvola {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50px;
+    opacity: 0.9;
+  }
+  .nuvola::before, .nuvola::after {
+    content: "";
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+  }
+ 
+  #punteggio {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(255, 255, 255, 0.75);
+    color: var(--testo);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    z-index: 10;
+  }
+ 
+  .palloncino {
+    position: absolute;
+    bottom: -140px;
+    width: 90px;
+    height: 110px;
+    cursor: pointer;
+    transform: translateX(-50%);
+    animation-name: sali;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+    user-select: none;
+  }
+ 
+  .palloncino .corpo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50% 50% 48% 48%;
+    position: relative;
+    box-shadow: inset -8px -10px 15px rgba(0,0,0,0.15), inset 8px 8px 15px rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+ 
+  .palloncino .corpo::after {
+    /* nodino del palloncino */
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid inherit;
+  }
+ 
+  .palloncino .lettera {
+    font-size: 2.6rem;
+    font-weight: bold;
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 2px 3px rgba(0,0,0,0.25);
+    pointer-events: none;
+  }
+ 
+  .palloncino .filo {
+    position: absolute;
+    top: 108px;
+    left: 50%;
+    width: 2px;
+    height: 60px;
+    background: rgba(80, 60, 40, 0.5);
+    transform: translateX(-50%);
+  }
+ 
+  @keyframes sali {
+    from { bottom: -140px; }
+    to { bottom: 108%; }
+  }
+ 
+  /* effetto scoppio */
+  .scoppio {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+  .scoppio span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--frammento, #fff);
+    animation: espandi 0.5s ease-out forwards;
+  }
+  @keyframes espandi {
+    from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    to   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+ 
+<div class="sole"></div>
+<div id="punteggio">Palloncini scoppiati: 0</div>
+<div id="cielo"></div>
+ 
+<script>
+  const cielo = document.getElementById("cielo");
+  const punteggioEl = document.getElementById("punteggio");
+ 
+  const ALFABETO = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const COLORI = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#4dabf7", "#9775fa", "#f783ac"];
+ 
+  let punteggio = 0;
+ 
+  function letteraCasuale() {
+    return ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
+  }
+ 
+  function coloreCasuale() {
+    return COLORI[Math.floor(Math.random() * COLORI.length)];
+  }
+ 
+  function creaPalloncino() {
+    const palloncino = document.createElement("div");
+    palloncino.className = "palloncino";
+ 
+    // posizione orizzontale casuale (tenendo un margine dai bordi)
+    const posizioneX = 8 + Math.random() * 84; // percentuale
+    palloncino.style.left = posizioneX + "%";
+ 
+    // durata e colore casuali per varietà
+    const durata = 7 + Math.random() * 6; // tra 7 e 13 secondi
+    palloncino.style.animationDuration = durata + "s";
+    const colore = coloreCasuale();
+ 
+    palloncino.innerHTML = `
+      <div class="filo"></div>
+      <div class="corpo" style="background:${colore}">
+        <span class="lettera">${letteraCasuale()}</span>
+      </div>
+    `;
+ 
+    // se il palloncino arriva in cima senza essere scoppiato, lo rimuoviamo e ne creiamo uno nuovo
+    palloncino.addEventListener("animationend", () => {
+      palloncino.remove();
+      creaPalloncino();
+    });
+ 
+    palloncino.addEventListener("click", () => scoppia(palloncino));
+ 
+    cielo.appendChild(palloncino);
+  }
+ 
+  function scoppia(palloncino) {
+    const rect = palloncino.getBoundingClientRect();
+    const centroX = rect.left + rect.width / 2;
+    const centroY = rect.top + rect.height / 2;
+    const colore = palloncino.querySelector(".corpo").style.background;
+ 
+    // effetto scoppio: piccoli frammenti che si allontanano dal centro
+    const scoppioEl = document.createElement("div");
+    scoppioEl.className = "scoppio";
+    scoppioEl.style.left = centroX + "px";
+    scoppioEl.style.top = centroY + "px";
+ 
+    for (let i = 0; i < 10; i++) {
+      const frammento = document.createElement("span");
+      const angolo = (Math.PI * 2 * i) / 10;
+      const distanza = 40 + Math.random() * 20;
+      frammento.style.setProperty("--dx", Math.cos(angolo) * distanza + "px");
+      frammento.style.setProperty("--dy", Math.sin(angolo) * distanza + "px");
+      frammento.style.setProperty("--frammento", colore);
+      scoppioEl.appendChild(frammento);
+    }
+ 
+    document.body.appendChild(scoppioEl);
+    setTimeout(() => scoppioEl.remove(), 550);
+ 
+    palloncino.remove();
+ 
+    punteggio++;
+    punteggioEl.textContent = "Palloncini scoppiati: " + punteggio;
+ 
+    // al posto del palloncino scoppiato, ne appare uno nuovo con un'altra lettera
+    creaPalloncino();
+  }
+ 
+  function creaNuvola(top, left, scala) {
+    const nuvola = document.createElement("div");
+    nuvola.className = "nuvola";
+    nuvola.style.top = top + "px";
+    nuvola.style.left = left + "px";
+    nuvola.style.width = (90 * scala) + "px";
+    nuvola.style.height = (30 * scala) + "px";
+    nuvola.style.setProperty("--s", scala);
+    document.body.appendChild(nuvola);
+ 
+    const bolla1 = document.createElement("div");
+    bolla1.style.position = "absolute";
+    bolla1.style.background = "inherit";
+    bolla1.style.borderRadius = "50%";
+    bolla1.style.width = (50 * scala) + "px";
+    bolla1.style.height = (50 * scala) + "px";
+    bolla1.style.top = (-20 * scala) + "px";
+    bolla1.style.left = (10 * scala) + "px";
+    nuvola.appendChild(bolla1);
+ 
+    const bolla2 = document.createElement("div");
+    bolla2.style.position = "absolute";
+    bolla2.style.background = "inherit";
+    bolla2.style.borderRadius = "50%";
+    bolla2.style.width = (40 * scala) + "px";
+    bolla2.style.height = (40 * scala) + "px";
+    bolla2.style.top = (-12 * scala) + "px";
+    bolla2.style.left = (45 * scala) + "px";
+    nuvola.appendChild(bolla2);
+  }
+ 
+  // qualche nuvola decorativa fissa
+  creaNuvola(60, 60, 1);
+  creaNuvola(140, 300, 0.7);
+  creaNuvola(90, 600, 1.1);
+ 
+  // numero iniziale di palloncini sullo schermo
+  const NUMERO_PALLONCINI = 6;
+  for (let i = 0; i < NUMERO_PALLONCINI; i++) {
+    setTimeout(creaPalloncino, i * 600);
+  }
+</script>
+ 
+</body>
+</html>
+ 
