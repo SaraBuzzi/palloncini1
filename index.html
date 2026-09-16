@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -24,7 +23,6 @@
     position: relative;
   }
  
-  /* Sole decorativo, fermo, in alto */
   .sole {
     position: absolute;
     top: 30px;
@@ -36,18 +34,79 @@
     box-shadow: 0 0 40px 10px rgba(255, 224, 102, 0.7);
   }
  
-  /* Nuvole decorative */
   .nuvola {
     position: absolute;
     background: rgba(255, 255, 255, 0.85);
     border-radius: 50px;
-    opacity: 0.9;
   }
-  .nuvola::before, .nuvola::after {
-    content: "";
+ 
+  /* ---------- Pannello della parola in alto al centro ---------- */
+  #pannello {
     position: absolute;
-    background: inherit;
-    border-radius: 50%;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    text-align: center;
+    pointer-events: none;
+  }
+ 
+  #istruzione {
+    color: rgba(255,255,255,0.95);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+ 
+  #parola {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+ 
+  .casella {
+    width: 52px;
+    height: 62px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.35);
+    border: 3px solid rgba(255,255,255,0.75);
+    color: rgba(255,255,255,0.9);
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.25s, transform 0.25s, color 0.25s, border-color 0.25s;
+  }
+ 
+  /* la lettera che devi cercare adesso */
+  .casella.attiva {
+    border-color: #fff;
+    animation: pulsa 1.2s ease-in-out infinite;
+  }
+ 
+  /* lettera gia trovata */
+  .casella.trovata {
+    background: #69db7c;
+    border-color: #2f9e44;
+    color: #fff;
+    transform: scale(1.08);
+  }
+ 
+  #parola.completata .casella {
+    animation: festeggia 0.5s ease-out;
+  }
+ 
+  @keyframes pulsa {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0.6); }
+    50%      { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+  }
+ 
+  @keyframes festeggia {
+    0%   { transform: scale(1.08) rotate(0deg); }
+    30%  { transform: scale(1.25) rotate(-6deg); }
+    60%  { transform: scale(1.25) rotate(6deg); }
+    100% { transform: scale(1.08) rotate(0deg); }
   }
  
   #punteggio {
@@ -58,14 +117,15 @@
     color: var(--testo);
     padding: 8px 16px;
     border-radius: 20px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: bold;
     z-index: 10;
   }
  
+  /* ---------- Palloncini ---------- */
   .palloncino {
     position: absolute;
-    bottom: -140px;
+    bottom: -160px;
     width: 90px;
     height: 110px;
     cursor: pointer;
@@ -87,50 +147,50 @@
     justify-content: center;
   }
  
-  .palloncino .corpo::after {
-    /* nodino del palloncino */
-    content: "";
-    position: absolute;
-    bottom: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 10px solid inherit;
-  }
- 
   .palloncino .lettera {
     font-size: 2.6rem;
     font-weight: bold;
-    color: rgba(255,255,255,0.95);
+    color: rgba(255,255,255,0.97);
     text-shadow: 0 2px 3px rgba(0,0,0,0.25);
     pointer-events: none;
   }
  
   .palloncino .filo {
     position: absolute;
-    top: 108px;
+    top: 110px;
     left: 50%;
     width: 2px;
-    height: 60px;
-    background: rgba(80, 60, 40, 0.5);
+    height: 55px;
+    background: rgba(80, 60, 40, 0.45);
     transform: translateX(-50%);
   }
  
-  @keyframes sali {
-    from { bottom: -140px; }
-    to { bottom: 108%; }
+  /* palloncino sbagliato: traballa */
+  .palloncino.sbagliato .corpo {
+    animation: trema 0.4s ease;
   }
  
-  /* effetto scoppio */
+  @keyframes trema {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(-8px) rotate(-6deg); }
+    40% { transform: translateX(8px) rotate(6deg); }
+    60% { transform: translateX(-6px) rotate(-4deg); }
+    80% { transform: translateX(6px) rotate(4deg); }
+  }
+ 
+  @keyframes sali {
+    from { bottom: -160px; }
+    to   { bottom: 110%; }
+  }
+ 
+  /* ---------- Effetto scoppio ---------- */
   .scoppio {
     position: absolute;
     width: 90px;
     height: 90px;
     transform: translate(-50%, -50%);
     pointer-events: none;
+    z-index: 30;
   }
   .scoppio span {
     position: absolute;
@@ -146,69 +206,212 @@
     from { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     to   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.3); opacity: 0; }
   }
+ 
+  /* ---------- Messaggio "Bravo!" ---------- */
+  #messaggio {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    font-size: 3.2rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 40;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  #messaggio.visibile {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+ 
+  @media (max-width: 600px) {
+    .casella { width: 38px; height: 46px; font-size: 1.4rem; border-width: 2px; }
+    #parola { gap: 6px; }
+    .palloncino { width: 70px; height: 86px; }
+    .palloncino .lettera { font-size: 2rem; }
+  }
 </style>
 </head>
 <body>
  
 <div class="sole"></div>
-<div id="punteggio">Palloncini scoppiati: 0</div>
+<div id="punteggio">Parole completate: 0</div>
+ 
+<div id="pannello">
+  <div id="istruzione">Scoppia le lettere in ordine</div>
+  <div id="parola"></div>
+</div>
+ 
+<div id="messaggio"></div>
 <div id="cielo"></div>
  
 <script>
-  const cielo = document.getElementById("cielo");
-  const punteggioEl = document.getElementById("punteggio");
+  /* =========================================================
+     DATI
+     ========================================================= */
  
-  const ALFABETO = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  // Lista di parole. Puoi aggiungerne o toglierne quante vuoi:
+  // basta scriverle qui dentro, in MAIUSCOLO, tra virgolette e separate da virgole.
+  const PAROLE = [
+    "CASA", "SOLE", "MARE", "LUNA", "GATTO", "CANE", "FIORE", "PANE",
+    "LIBRO", "NAVE", "PESCE", "ALBERO", "STELLA", "NUVOLA", "CUORE",
+    "MELA", "TRENO", "SCUOLA", "PRATO", "VENTO", "NEVE", "RANA", "TOPO",
+    "LUPO", "ORSO", "PONTE", "FESTA", "MUSICA", "SEDIA", "TAVOLO",
+    "PORTA", "GELATO", "TORTA", "LATTE", "MIELE", "ROSA", "BARCA",
+    "ISOLA", "MONTE", "FIUME", "SABBIA", "FARFALLA", "APE", "FORMICA",
+    "DELFINO", "BALENA", "TIGRE", "ZEBRA", "CAVALLO", "PECORA", "MUCCA",
+    "GALLINA", "CAROTA", "PATATA", "LIMONE", "FRAGOLA", "BANANA",
+    "PIZZA", "PASTA", "SALE", "BOSCO", "CIELO", "TERRA", "FUOCO",
+    "ACQUA", "PIOGGIA", "OMBRELLO", "SCARPA", "CAPPELLO", "PALLA",
+    "GIOCO", "AMICO", "MAMMA", "NONNA", "BAMBINO", "SORRISO", "BACIO",
+    "SOGNO", "NOTTE", "GIORNO", "ESTATE", "INVERNO"
+  ];
+ 
+  // Alfabeto italiano (senza J K W X Y, che non servono a queste parole)
+  const ALFABETO = "ABCDEFGHILMNOPQRSTUVZ".split("");
   const COLORI = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#4dabf7", "#9775fa", "#f783ac"];
  
-  let punteggio = 0;
+  const NUMERO_PALLONCINI = 7;
  
-  function letteraCasuale() {
-    return ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
+  /* =========================================================
+     STATO DEL GIOCO
+     ========================================================= */
+ 
+  const cielo = document.getElementById("cielo");
+  const parolaEl = document.getElementById("parola");
+  const punteggioEl = document.getElementById("punteggio");
+  const messaggioEl = document.getElementById("messaggio");
+ 
+  let parolaCorrente = "";   // es. "CASA"
+  let indiceLettera = 0;     // quale lettera bisogna scoppiare adesso (0 = la prima)
+  let paroleCompletate = 0;
+  let inPausa = false;       // true durante il festeggiamento tra una parola e l'altra
+ 
+  /* =========================================================
+     PAROLA IN ALTO
+     ========================================================= */
+ 
+  function nuovaParola() {
+    let scelta;
+    do {
+      scelta = PAROLE[Math.floor(Math.random() * PAROLE.length)];
+    } while (scelta === parolaCorrente && PAROLE.length > 1);
+ 
+    parolaCorrente = scelta;
+    indiceLettera = 0;
+    disegnaParola();
   }
+ 
+  function disegnaParola() {
+    parolaEl.innerHTML = "";
+    parolaEl.classList.remove("completata");
+ 
+    for (let i = 0; i < parolaCorrente.length; i++) {
+      const casella = document.createElement("div");
+      casella.className = "casella";
+      casella.textContent = parolaCorrente[i];
+ 
+      if (i < indiceLettera) {
+        casella.classList.add("trovata");   // gia scoppiata
+      } else if (i === indiceLettera) {
+        casella.classList.add("attiva");    // la prossima da cercare
+      }
+ 
+      parolaEl.appendChild(casella);
+    }
+  }
+ 
+  function letteraDaCercare() {
+    return parolaCorrente[indiceLettera];
+  }
+ 
+  /* =========================================================
+     PALLONCINI
+     ========================================================= */
  
   function coloreCasuale() {
     return COLORI[Math.floor(Math.random() * COLORI.length)];
+  }
+ 
+  // Controlla se in cielo c'e gia un palloncino con la lettera che serve
+  function letteraPresenteInCielo(lettera) {
+    return [...cielo.querySelectorAll(".palloncino")]
+      .some(p => p.dataset.lettera === lettera);
+  }
+ 
+  function scegliLettera() {
+    const serve = letteraDaCercare();
+ 
+    // Se la lettera che serve non c'e in cielo, questo palloncino la porta:
+    // cosi il gioco non si blocca mai.
+    if (serve && !letteraPresenteInCielo(serve)) return serve;
+ 
+    // Altrimenti: ogni tanto una lettera della parola, altrimenti una a caso.
+    if (Math.random() < 0.35 && parolaCorrente) {
+      return parolaCorrente[Math.floor(Math.random() * parolaCorrente.length)];
+    }
+    return ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
   }
  
   function creaPalloncino() {
     const palloncino = document.createElement("div");
     palloncino.className = "palloncino";
  
-    // posizione orizzontale casuale (tenendo un margine dai bordi)
-    const posizioneX = 8 + Math.random() * 84; // percentuale
+    const lettera = scegliLettera();
+    palloncino.dataset.lettera = lettera;
+ 
+    const posizioneX = 8 + Math.random() * 84;      // percentuale
     palloncino.style.left = posizioneX + "%";
  
-    // durata e colore casuali per varietà
-    const durata = 7 + Math.random() * 6; // tra 7 e 13 secondi
+    const durata = 9 + Math.random() * 6;           // tra 9 e 15 secondi
     palloncino.style.animationDuration = durata + "s";
+ 
     const colore = coloreCasuale();
+    palloncino.dataset.colore = colore;
  
-    palloncino.innerHTML = `
-      <div class="filo"></div>
-      <div class="corpo" style="background:${colore}">
-        <span class="lettera">${letteraCasuale()}</span>
-      </div>
-    `;
+    palloncino.innerHTML =
+      '<div class="filo"></div>' +
+      '<div class="corpo" style="background:' + colore + '">' +
+        '<span class="lettera">' + lettera + '</span>' +
+      '</div>';
  
-    // se il palloncino arriva in cima senza essere scoppiato, lo rimuoviamo e ne creiamo uno nuovo
-    palloncino.addEventListener("animationend", () => {
+    // Se arriva in cima senza essere scoppiato, sparisce e ne nasce un altro
+    palloncino.addEventListener("animationend", function () {
       palloncino.remove();
       creaPalloncino();
     });
  
-    palloncino.addEventListener("click", () => scoppia(palloncino));
+    palloncino.addEventListener("click", function () {
+      cliccaPalloncino(palloncino);
+    });
  
     cielo.appendChild(palloncino);
+  }
+ 
+  function cliccaPalloncino(palloncino) {
+    if (inPausa) return;
+ 
+    if (palloncino.dataset.lettera === letteraDaCercare()) {
+      scoppia(palloncino);
+      avanzaParola();
+    } else {
+      // lettera sbagliata: il palloncino trema ma non scoppia
+      palloncino.classList.add("sbagliato");
+      setTimeout(function () {
+        palloncino.classList.remove("sbagliato");
+      }, 400);
+    }
   }
  
   function scoppia(palloncino) {
     const rect = palloncino.getBoundingClientRect();
     const centroX = rect.left + rect.width / 2;
     const centroY = rect.top + rect.height / 2;
-    const colore = palloncino.querySelector(".corpo").style.background;
+    const colore = palloncino.dataset.colore;
  
-    // effetto scoppio: piccoli frammenti che si allontanano dal centro
     const scoppioEl = document.createElement("div");
     scoppioEl.className = "scoppio";
     scoppioEl.style.left = centroX + "px";
@@ -217,7 +420,7 @@
     for (let i = 0; i < 10; i++) {
       const frammento = document.createElement("span");
       const angolo = (Math.PI * 2 * i) / 10;
-      const distanza = 40 + Math.random() * 20;
+      const distanza = 40 + Math.random() * 25;
       frammento.style.setProperty("--dx", Math.cos(angolo) * distanza + "px");
       frammento.style.setProperty("--dy", Math.sin(angolo) * distanza + "px");
       frammento.style.setProperty("--frammento", colore);
@@ -225,16 +428,49 @@
     }
  
     document.body.appendChild(scoppioEl);
-    setTimeout(() => scoppioEl.remove(), 550);
+    setTimeout(function () { scoppioEl.remove(); }, 550);
  
     palloncino.remove();
- 
-    punteggio++;
-    punteggioEl.textContent = "Palloncini scoppiati: " + punteggio;
- 
-    // al posto del palloncino scoppiato, ne appare uno nuovo con un'altra lettera
-    creaPalloncino();
+    creaPalloncino();   // al suo posto ne nasce uno nuovo
   }
+ 
+  function avanzaParola() {
+    indiceLettera++;
+ 
+    if (indiceLettera >= parolaCorrente.length) {
+      completaParola();
+    } else {
+      disegnaParola();
+    }
+  }
+ 
+  function completaParola() {
+    disegnaParola();                        // tutte le caselle verdi
+    parolaEl.classList.add("completata");
+ 
+    paroleCompletate++;
+    punteggioEl.textContent = "Parole completate: " + paroleCompletate;
+ 
+    mostraMessaggio("Bravo! " + parolaCorrente);
+ 
+    inPausa = true;
+    setTimeout(function () {
+      inPausa = false;
+      nuovaParola();
+    }, 1600);
+  }
+ 
+  function mostraMessaggio(testo) {
+    messaggioEl.textContent = testo;
+    messaggioEl.classList.add("visibile");
+    setTimeout(function () {
+      messaggioEl.classList.remove("visibile");
+    }, 1400);
+  }
+ 
+  /* =========================================================
+     SCENOGRAFIA
+     ========================================================= */
  
   function creaNuvola(top, left, scala) {
     const nuvola = document.createElement("div");
@@ -243,42 +479,44 @@
     nuvola.style.left = left + "px";
     nuvola.style.width = (90 * scala) + "px";
     nuvola.style.height = (30 * scala) + "px";
-    nuvola.style.setProperty("--s", scala);
     document.body.appendChild(nuvola);
  
-    const bolla1 = document.createElement("div");
-    bolla1.style.position = "absolute";
-    bolla1.style.background = "inherit";
-    bolla1.style.borderRadius = "50%";
-    bolla1.style.width = (50 * scala) + "px";
-    bolla1.style.height = (50 * scala) + "px";
-    bolla1.style.top = (-20 * scala) + "px";
-    bolla1.style.left = (10 * scala) + "px";
-    nuvola.appendChild(bolla1);
- 
-    const bolla2 = document.createElement("div");
-    bolla2.style.position = "absolute";
-    bolla2.style.background = "inherit";
-    bolla2.style.borderRadius = "50%";
-    bolla2.style.width = (40 * scala) + "px";
-    bolla2.style.height = (40 * scala) + "px";
-    bolla2.style.top = (-12 * scala) + "px";
-    bolla2.style.left = (45 * scala) + "px";
-    nuvola.appendChild(bolla2);
+    const misure = [[50, -20, 10], [40, -12, 45]];
+    misure.forEach(function (m) {
+      const bolla = document.createElement("div");
+      bolla.style.position = "absolute";
+      bolla.style.background = "inherit";
+      bolla.style.borderRadius = "50%";
+      bolla.style.width = (m[0] * scala) + "px";
+      bolla.style.height = (m[0] * scala) + "px";
+      bolla.style.top = (m[1] * scala) + "px";
+      bolla.style.left = (m[2] * scala) + "px";
+      nuvola.appendChild(bolla);
+    });
   }
  
-  // qualche nuvola decorativa fissa
-  creaNuvola(60, 60, 1);
-  creaNuvola(140, 300, 0.7);
-  creaNuvola(90, 600, 1.1);
+  creaNuvola(200, 60, 1);
+  creaNuvola(320, 300, 0.7);
+  creaNuvola(250, 620, 1.1);
  
-  // numero iniziale di palloncini sullo schermo
-  const NUMERO_PALLONCINI = 6;
+  /* =========================================================
+     AVVIO
+     ========================================================= */
+ 
+  nuovaParola();
+ 
   for (let i = 0; i < NUMERO_PALLONCINI; i++) {
-    setTimeout(creaPalloncino, i * 600);
+    setTimeout(creaPalloncino, i * 500);
   }
+ 
+  // Rete di sicurezza: ogni 2 secondi controlla che la lettera da cercare
+  // sia davvero presente in cielo, altrimenti ne fa comparire una.
+  setInterval(function () {
+    if (inPausa) return;
+    const serve = letteraDaCercare();
+    if (serve && !letteraPresenteInCielo(serve)) creaPalloncino();
+  }, 2000);
 </script>
  
 </body>
 </html>
- 
