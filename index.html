@@ -79,13 +79,11 @@
     transition: background 0.25s, transform 0.25s, color 0.25s, border-color 0.25s;
   }
  
-  /* la lettera che devi cercare adesso */
   .casella.attiva {
     border-color: #fff;
     animation: pulsa 1.2s ease-in-out infinite;
   }
  
-  /* lettera gia trovata */
   .casella.trovata {
     background: #69db7c;
     border-color: #2f9e44;
@@ -112,7 +110,7 @@
   #punteggio {
     position: absolute;
     top: 16px;
-    left: 16px;
+    left: 70px;
     background: rgba(255, 255, 255, 0.75);
     color: var(--testo);
     padding: 8px 16px;
@@ -120,6 +118,7 @@
     font-size: 1.05rem;
     font-weight: bold;
     z-index: 10;
+    transition: left 0.3s;
   }
  
   /* ---------- Palloncini ---------- */
@@ -165,7 +164,6 @@
     transform: translateX(-50%);
   }
  
-  /* palloncino sbagliato: traballa */
   .palloncino.sbagliato .corpo {
     animation: trema 0.4s ease;
   }
@@ -227,17 +225,97 @@
     transform: translate(-50%, -50%) scale(1);
   }
  
+  /* ---------- Menu a scomparsa (per chi somministra il gioco) ---------- */
+  #bottone-menu {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.85);
+    color: var(--testo);
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 60;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+ 
+  #menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 240px;
+    background: rgba(255,255,255,0.97);
+    box-shadow: 3px 0 12px rgba(0,0,0,0.2);
+    z-index: 55;
+    padding: 70px 20px 20px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+ 
+  #menu.aperto {
+    transform: translateX(0);
+  }
+ 
+  #menu h2 {
+    font-size: 1rem;
+    color: var(--testo);
+    margin: 0 0 14px;
+  }
+ 
+  .voce-gruppo {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background: #f1f3f5;
+    color: var(--testo);
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+ 
+  .voce-gruppo:hover {
+    background: #e9ecef;
+  }
+ 
+  .voce-gruppo.selezionato {
+    border-color: #4dabf7;
+    background: #e7f5ff;
+  }
+ 
+  .voce-gruppo .conteggio {
+    font-weight: normal;
+    color: #868e96;
+    font-size: 0.8rem;
+  }
+ 
   @media (max-width: 600px) {
     .casella { width: 38px; height: 46px; font-size: 1.4rem; border-width: 2px; }
     #parola { gap: 6px; }
     .palloncino { width: 70px; height: 86px; }
     .palloncino .lettera { font-size: 2rem; }
+    #menu { width: 200px; }
   }
 </style>
 </head>
 <body>
  
 <div class="sole"></div>
+ 
+<button id="bottone-menu" title="Scegli il gruppo di parole">&#9776;</button>
+ 
+<div id="menu">
+  <h2>Gruppo di parole</h2>
+  <div id="lista-gruppi"></div>
+</div>
+ 
 <div id="punteggio">Parole completate: 0</div>
  
 <div id="pannello">
@@ -250,25 +328,19 @@
  
 <script>
   /* =========================================================
-     DATI
+     GRUPPI DI PAROLE
+     Riempi ogni gruppo con le parole che vuoi, in MAIUSCOLO,
+     tra virgolette, separate da virgole. Esempio:
+     "GRUPPO 1": ["CASA", "SOLE", "MARE"],
      ========================================================= */
  
-  // Lista di parole. Puoi aggiungerne o toglierne quante vuoi:
-  // basta scriverle qui dentro, in MAIUSCOLO, tra virgolette e separate da virgole.
-  const PAROLE = [
-    "CASA", "SOLE", "MARE", "LUNA", "GATTO", "CANE", "FIORE", "PANE",
-    "LIBRO", "NAVE", "PESCE", "ALBERO", "STELLA", "NUVOLA", "CUORE",
-    "MELA", "TRENO", "SCUOLA", "PRATO", "VENTO", "NEVE", "RANA", "TOPO",
-    "LUPO", "ORSO", "PONTE", "FESTA", "MUSICA", "SEDIA", "TAVOLO",
-    "PORTA", "GELATO", "TORTA", "LATTE", "MIELE", "ROSA", "BARCA",
-    "ISOLA", "MONTE", "FIUME", "SABBIA", "FARFALLA", "APE", "FORMICA",
-    "DELFINO", "BALENA", "TIGRE", "ZEBRA", "CAVALLO", "PECORA", "MUCCA",
-    "GALLINA", "CAROTA", "PATATA", "LIMONE", "FRAGOLA", "BANANA",
-    "PIZZA", "PASTA", "SALE", "BOSCO", "CIELO", "TERRA", "FUOCO",
-    "ACQUA", "PIOGGIA", "OMBRELLO", "SCARPA", "CAPPELLO", "PALLA",
-    "GIOCO", "AMICO", "MAMMA", "NONNA", "BAMBINO", "SORRISO", "BACIO",
-    "SOGNO", "NOTTE", "GIORNO", "ESTATE", "INVERNO"
-  ];
+  const GRUPPI = {
+    "Quattro": ["CASA", "CANE", "CARO", "BENE", "BICI", "BACO", "DATO", "DITO", "FAME", "FILO", "GARA", "GELO", "LAGO", "LUNA", "LATO", "MARE", "MESE", "NERO", "NAVE", "PANE", "PERO", "RISO", "RANA", "SALE", "SOLE", "TIMO", "TOPO", "VASO", "VINO", "ZIO", "ZUCCA", "CERA", "CIMA", "COSA", "FOCA", "FUGA", "MURO", "MOLA", "NOCE", "PEPE", "ANNO", "ANNA", "ENNE", "INNI", "OTTO", "OTTE", "OTTO", "ESSE", "OSSA", "ISSI", "ALLA", "ALLO", "ALLE", "ILLE", "AMME", "IMMO", "AMMA", "AGGO", "EGLI", "AGGI", "UGGI", "ECCO", "ACCA", "ICCI", "UCCA", "EBBE", "ABBA", "OBBO", "EFFE", "UFFA", "AFFI", "ARRA", "ERRE", "IRRI", "URRO", "AZZA", "OZZO", "AZZE", "EPPE", "IPPO"],
+    "Cinque - Sei": ["PESTO", "PISTA", "POSTO", "PUSTA", "BASTA", "RESTO", "BUSTA", "COSTA", "CASTO", "CESTO", "CESTA", "CISTA", "CONTO", "CANTA", "DENTE", "DENTE", "DENTO", "FESTA", "FUSTO", "GAMBA", "GAMBO", "GUSTO", "LAMPA", "LAMPO", "LENTO", "MANTA", "MONTE", "MENTA", "NASTRO", "MESTO", "PANCA", "PONTE", "PUNTO", "RAMPA", "RESTO", "SESTO", "TENDA", "TEMPO", "VAMPA", "PASTA", "BANANA", "PECORA", "PAPERA", "TAVOLA", "TAVOLO", "CAMERA", "DOMINO", "NUMERO", "VENERE", "LIMONE", "MELONE", "PILOTA", "MINUTO", "DENARO", "PAROLA", "LAVORO", "SAPORE", "RUMORE", "COLORE", "GIRONE", "GIRARE", "GELATO", "MAGICA", "FAGIANO", "VALICO", "SABATO", "SATANA", "RAPINA", "CATENA", "CADERE", "POTERE", "SEDERE", "VIVERE", "FIDARE", "BADARE", "GODERE", "NOTARE", "VOTARE", "ZOCCOLO", "VELENO"],
+    "Doppie - Quadri": ["PALLONE", "MATTINA", "GATTINO", "BELLINO", "BOTTONE", "CAPPELLO", "PENNELLO", "RAGAZZO", "RAGAZZA", "CARRETTA", "BARRETTA", "SERRATA", "TERRENA", "COLLETTO", "SACCHETTO", "PACCHETTO", "PICCINO", "SECCARE", "FUMETTO", "FIAMMATA", "FIACCOLA", "SOMMATO", "COMMEDIA", "DILEMMA", "CAMMELLO", "BATTELLO", "MAMMOLA", "GENNAIO", "DONNINA", "PANNOSO", "ROTELLA", "GONNELLA", "SPINOTTO", "PANETTO", "LUNETTA", "CANNETO", "PINZETTA", "MINACCIA", "PALLIDA", "TORRONE", "TELEFONO", "TAVOLINO", "QUADERNO", "CIOCCOLATO", "BICICLETTA", "MARGHERITA", "MATITONE", "GELATERIA", "TELEVISORE", "SUPERMERCATO", "PRIMAVERA", "BIBLIOTECA", "PALLONCINO", "CARAMELLA", "CAMERETTA", "LIMONATA", "POMODORO", "AEROPLANO", "MONTAGNA", "FARFALLA", "CORRIDORE", "DISEGNO", "SCRIVANIA", "FRIGORIFERO", "MATEMATICA", "ITALIANO", "AVVENTURA", "OMBRELLO", "PAGLIACCIO", "GIRASOLE", "ARCOBALENO", "CARABINA", "TAMBURO", "MACEDONIA", "PATATINA", "CUCCHIAIO", "LAVATRICE", "GIORNALAIO", "DENTIERA", "ZAINETTO"],
+    "Gruppi": ["SCIMMIA", "SCIROPPO", "SCIVOLO", "SCIOPERO", "SCIALLE", "SCIAME", "SCIENZA", "SCIOGLIERE", "FIGLIO", "FOGLIO", "MAGLIA", "CONIGLIO", "BOTTIGLIA", "FAMIGLIA", "PAGLIA", "SVEGLIA", "BAGNO", "LEGNO", "SOGNO", "DISEGNO", "RAGNO", "CASTAGNO", "MONTAGNA", "CAMPAGNA", "CHIAVE", "CHILO", "CHIESA", "CHIOCCIOLA", "CHIUSO", "CHIAMARE", "CHITARRA", "CHIARO", "GHIACCIO", "GHISA", "GHIRO", "GHIRLANDA", "GHIRIGORO", "GHIGNO", "UNGHIA", "FUNGHI"],
+    "Non parole": ["BLAN", "DRIM", "FLOS", "GRED", "PRUT", "STAC", "CRIV", "PLOF", "BREN", "SCUD", "GLIM", "TRAN", "FRAL", "SNOP", "TRUS", "SMED", "BLIT", "DRAP", "FLEN", "GRIS", "PRAF", "SCOB", "TRIM", "CLAF", "BROG", "SNAL", "FRIM", "GLAP", "TREP", "SPLON", "DRUF", "BLOS", "CRUN", "SMIP", "TRAL", "FLUP", "GREN", "PLIM", "SCAF", "BRUD","LAMITO", "PENUCA", "TAROPE", "MISADO", "FURELA", "GANIPO", "SELUNA", "DORIME", "PAVIRO", "TUNEGA", "CARIMO", "BALENOZA", "SIMATO", "LUNEPO", "MARIDE", "FONECA", "RIPADO", "TEMULO", "VASINOPE", "NALUDO", "GIRAME", "POLENA", "BISARO", "TERUGA", "MOLIPE", "SANURO", "PELIMO", "RINATOPE", "DESULO", "TAPINE", "LORAME", "MINAPO", "SERUTO", "VALINE", "TORAPE", "ZANULO", "FENIRO", "LAPIDEGO", "MURAPO", "SILENOPE"]
+  };
  
   // Alfabeto italiano (senza J K W X Y, che non servono a queste parole)
   const ALFABETO = "ABCDEFGHILMNOPQRSTUVZ".split("");
@@ -282,23 +354,81 @@
  
   const cielo = document.getElementById("cielo");
   const parolaEl = document.getElementById("parola");
+  const istruzioneEl = document.getElementById("istruzione");
   const punteggioEl = document.getElementById("punteggio");
   const messaggioEl = document.getElementById("messaggio");
+  const bottoneMenu = document.getElementById("bottone-menu");
+  const menuEl = document.getElementById("menu");
+  const listaGruppiEl = document.getElementById("lista-gruppi");
  
-  let parolaCorrente = "";   // es. "CASA"
-  let indiceLettera = 0;     // quale lettera bisogna scoppiare adesso (0 = la prima)
+  let nomeGruppoAttivo = Object.keys(GRUPPI)[0];
+  let parolaCorrente = "";
+  let indiceLettera = 0;
   let paroleCompletate = 0;
-  let inPausa = false;       // true durante il festeggiamento tra una parola e l'altra
+  let inPausa = false;
+ 
+  /* =========================================================
+     MENU LATERALE
+     ========================================================= */
+ 
+  function paroleGruppoAttivo() {
+    return GRUPPI[nomeGruppoAttivo] || [];
+  }
+ 
+  function disegnaMenu() {
+    listaGruppiEl.innerHTML = "";
+    Object.keys(GRUPPI).forEach(function (nome) {
+      const voce = document.createElement("button");
+      voce.className = "voce-gruppo" + (nome === nomeGruppoAttivo ? " selezionato" : "");
+      const n = GRUPPI[nome].length;
+      voce.innerHTML = nome + ' <span class="conteggio">(' + n + (n === 1 ? " parola" : " parole") + ")</span>";
+      voce.addEventListener("click", function () {
+        selezionaGruppo(nome);
+      });
+      listaGruppiEl.appendChild(voce);
+    });
+  }
+ 
+  function selezionaGruppo(nome) {
+    if (nome === nomeGruppoAttivo) return;
+    nomeGruppoAttivo = nome;
+    disegnaMenu();
+    menuEl.classList.remove("aperto");
+    nuovaParola();
+  }
+ 
+  bottoneMenu.addEventListener("click", function () {
+    menuEl.classList.toggle("aperto");
+  });
+ 
+  // click fuori dal menu per chiuderlo
+  document.addEventListener("click", function (e) {
+    if (!menuEl.contains(e.target) && e.target !== bottoneMenu && menuEl.classList.contains("aperto")) {
+      menuEl.classList.remove("aperto");
+    }
+  });
  
   /* =========================================================
      PAROLA IN ALTO
      ========================================================= */
  
   function nuovaParola() {
+    const elenco = paroleGruppoAttivo();
+ 
+    if (elenco.length === 0) {
+      parolaCorrente = "";
+      indiceLettera = 0;
+      istruzioneEl.textContent = "Aggiungi parole al \"" + nomeGruppoAttivo + "\" per iniziare";
+      parolaEl.innerHTML = "";
+      return;
+    }
+ 
+    istruzioneEl.textContent = "Scoppia le lettere in ordine";
+ 
     let scelta;
     do {
-      scelta = PAROLE[Math.floor(Math.random() * PAROLE.length)];
-    } while (scelta === parolaCorrente && PAROLE.length > 1);
+      scelta = elenco[Math.floor(Math.random() * elenco.length)];
+    } while (scelta === parolaCorrente && elenco.length > 1);
  
     parolaCorrente = scelta;
     indiceLettera = 0;
@@ -315,9 +445,9 @@
       casella.textContent = parolaCorrente[i];
  
       if (i < indiceLettera) {
-        casella.classList.add("trovata");   // gia scoppiata
+        casella.classList.add("trovata");
       } else if (i === indiceLettera) {
-        casella.classList.add("attiva");    // la prossima da cercare
+        casella.classList.add("attiva");
       }
  
       parolaEl.appendChild(casella);
@@ -325,7 +455,7 @@
   }
  
   function letteraDaCercare() {
-    return parolaCorrente[indiceLettera];
+    return parolaCorrente ? parolaCorrente[indiceLettera] : null;
   }
  
   /* =========================================================
@@ -336,7 +466,6 @@
     return COLORI[Math.floor(Math.random() * COLORI.length)];
   }
  
-  // Controlla se in cielo c'e gia un palloncino con la lettera che serve
   function letteraPresenteInCielo(lettera) {
     return [...cielo.querySelectorAll(".palloncino")]
       .some(p => p.dataset.lettera === lettera);
@@ -345,12 +474,9 @@
   function scegliLettera() {
     const serve = letteraDaCercare();
  
-    // Se la lettera che serve non c'e in cielo, questo palloncino la porta:
-    // cosi il gioco non si blocca mai.
     if (serve && !letteraPresenteInCielo(serve)) return serve;
  
-    // Altrimenti: ogni tanto una lettera della parola, altrimenti una a caso.
-    if (Math.random() < 0.35 && parolaCorrente) {
+    if (serve && Math.random() < 0.35 && parolaCorrente) {
       return parolaCorrente[Math.floor(Math.random() * parolaCorrente.length)];
     }
     return ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
@@ -363,10 +489,10 @@
     const lettera = scegliLettera();
     palloncino.dataset.lettera = lettera;
  
-    const posizioneX = 8 + Math.random() * 84;      // percentuale
+    const posizioneX = 8 + Math.random() * 84;
     palloncino.style.left = posizioneX + "%";
  
-    const durata = 9 + Math.random() * 6;           // tra 9 e 15 secondi
+    const durata = 9 + Math.random() * 6;
     palloncino.style.animationDuration = durata + "s";
  
     const colore = coloreCasuale();
@@ -378,7 +504,6 @@
         '<span class="lettera">' + lettera + '</span>' +
       '</div>';
  
-    // Se arriva in cima senza essere scoppiato, sparisce e ne nasce un altro
     palloncino.addEventListener("animationend", function () {
       palloncino.remove();
       creaPalloncino();
@@ -392,13 +517,12 @@
   }
  
   function cliccaPalloncino(palloncino) {
-    if (inPausa) return;
+    if (inPausa || !parolaCorrente) return;
  
     if (palloncino.dataset.lettera === letteraDaCercare()) {
       scoppia(palloncino);
       avanzaParola();
     } else {
-      // lettera sbagliata: il palloncino trema ma non scoppia
       palloncino.classList.add("sbagliato");
       setTimeout(function () {
         palloncino.classList.remove("sbagliato");
@@ -431,7 +555,7 @@
     setTimeout(function () { scoppioEl.remove(); }, 550);
  
     palloncino.remove();
-    creaPalloncino();   // al suo posto ne nasce uno nuovo
+    creaPalloncino();
   }
  
   function avanzaParola() {
@@ -445,13 +569,13 @@
   }
  
   function completaParola() {
-    disegnaParola();                        // tutte le caselle verdi
+    disegnaParola();
     parolaEl.classList.add("completata");
  
     paroleCompletate++;
     punteggioEl.textContent = "Parole completate: " + paroleCompletate;
  
-    mostraMessaggio("Bravo! " + parolaCorrente);
+    mostraMessaggio(parolaCorrente);
  
     inPausa = true;
     setTimeout(function () {
@@ -503,14 +627,13 @@
      AVVIO
      ========================================================= */
  
+  disegnaMenu();
   nuovaParola();
  
   for (let i = 0; i < NUMERO_PALLONCINI; i++) {
     setTimeout(creaPalloncino, i * 500);
   }
  
-  // Rete di sicurezza: ogni 2 secondi controlla che la lettera da cercare
-  // sia davvero presente in cielo, altrimenti ne fa comparire una.
   setInterval(function () {
     if (inPausa) return;
     const serve = letteraDaCercare();
