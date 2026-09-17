@@ -54,7 +54,7 @@
   #istruzione {
     color: rgba(255,255,255,0.95);
     text-shadow: 0 2px 4px rgba(0,0,0,0.25);
-    font-size: 1rem;
+    font-size: 0.8rem;
     letter-spacing: 1px;
     margin-bottom: 8px;
     text-transform: uppercase;
@@ -311,10 +311,10 @@
 
 <div class="sole"></div>
 
-<button id="bottone-menu" title="">&#9776;</button>
+<button id="bottone-menu" title="Scegli il gruppo di parole">&#9776;</button>
 
 <div id="menu">
-  <h2></h2>
+  <h2>Gruppo di parole</h2>
   <div id="lista-gruppi"></div>
 </div>
 
@@ -345,7 +345,9 @@
   const ALFABETO = "ABCDEFGHILMNOPQRSTUVZ".split("");
   const COLORI = ["#ff6b6b", "#ffa94d", "#ffd43b", "#69db7c", "#4dabf7", "#9775fa", "#f783ac"];
 
-  const NUMERO_PALLONCINI = 9;
+  const POPOLAZIONE_OBIETTIVO = 12; // quanti palloncini vogliamo sempre in cielo
+  const RITARDO_MIN_RICOMPARSA = 250;  // ms minimi prima che ne compaia uno nuovo
+  const RITARDO_MAX_RICOMPARSA = 900;  // ms massimi prima che ne compaia uno nuovo
 
   /* =========================================================
      STATO DEL GIOCO
@@ -502,8 +504,9 @@
         '<span class="lettera">' + lettera + '</span>' +
       '</div>';
 
-    // Quando arriva in cima senza essere scoppiato: sparisce e ne nasce
-    // un altro dopo una piccola pausa casuale (non tutti insieme)
+    // Quando arriva in cima senza essere scoppiato, sparisce e al suo posto
+    // ne compare subito un altro (con un piccolo ritardo casuale) cosi il
+    // cielo non resta mai vuoto
     palloncino.addEventListener("animationend", function () {
       palloncino.remove();
       programmaNuovoPalloncino();
@@ -516,12 +519,11 @@
     cielo.appendChild(palloncino);
   }
 
-  // Crea un nuovo palloncino dopo un piccolo ritardo casuale, cosi la
-  // comparsa risulta piu naturale invece che tutta insieme
-  function programmaNuovoPalloncino(minMs, maxMs) {
-    const min = minMs || 200;
-    const max = maxMs || 1400;
-    const ritardo = min + Math.random() * (max - min);
+  // Crea un nuovo palloncino dopo un piccolo ritardo casuale: la sostituzione
+  // e sempre 1 a 1 (un palloncino perso, uno nuovo in arrivo), cosi il cielo
+  // resta pieno con continuita, senza raffiche e senza vuoti
+  function programmaNuovoPalloncino() {
+    const ritardo = RITARDO_MIN_RICOMPARSA + Math.random() * (RITARDO_MAX_RICOMPARSA - RITARDO_MIN_RICOMPARSA);
     setTimeout(creaPalloncino, ritardo);
   }
 
@@ -564,8 +566,7 @@
     setTimeout(function () { scoppioEl.remove(); }, 550);
 
     palloncino.remove();
-    // dopo uno scoppio il rimpiazzo puo arrivare un filo piu veloce
-    programmaNuovoPalloncino(150, 900);
+    programmaNuovoPalloncino();
   }
 
   function avanzaParola() {
@@ -583,7 +584,7 @@
     parolaEl.classList.add("completata");
 
     paroleCompletate++;
-    punteggioEl.textContent = "Parole completate: " + paroleCompletate;
+    punteggioEl.textContent = paroleCompletate;
 
     mostraMessaggio(parolaCorrente);
 
@@ -640,21 +641,25 @@
   disegnaMenu();
   nuovaParola();
 
-  // Lancio iniziale con ritardi casuali crescenti, invece che tutti
-  // insieme a intervalli fissi: risulta piu naturale
+  // Popolazione iniziale, con arrivi sfalsati (non tutti insieme)
   let accumulo = 0;
-  for (let i = 0; i < NUMERO_PALLONCINI; i++) {
-    accumulo += 200 + Math.random() * 500;
+  for (let i = 0; i < POPOLAZIONE_OBIETTIVO; i++) {
+    accumulo += 200 + Math.random() * 400;
     setTimeout(creaPalloncino, accumulo);
   }
 
-  // Rete di sicurezza: ogni 2 secondi controlla che la lettera da cercare
-  // sia davvero presente in cielo, altrimenti ne fa comparire una subito
+  // Rete di sicurezza leggera: ogni secondo controlla che il numero di
+  // palloncini non sia sceso sotto l'obiettivo (es. per un bug o un lancio
+  // mancato) e che la lettera che serve sia presente in cielo
   setInterval(function () {
-    if (inPausa) return;
-    const serve = letteraDaCercare();
-    if (serve && !letteraPresenteInCielo(serve)) creaPalloncino();
-  }, 2000);
+    const attuali = cielo.querySelectorAll(".palloncino").length;
+    if (attuali < POPOLAZIONE_OBIETTIVO) creaPalloncino();
+
+    if (!inPausa) {
+      const serve = letteraDaCercare();
+      if (serve && !letteraPresenteInCielo(serve)) creaPalloncino();
+    }
+  }, 1000);
 </script>
 
 </body>
