@@ -28,7 +28,3 @@ The game runs directly in a web browser and does not require any additional depe
 2. Open `index.html` in your browser.
 3. Start playing by selecting the balloons with the letters needed to complete each word.
 
----
-
-**Project type:** Educational web game  
-**Developed by:** Sara Buzzi
